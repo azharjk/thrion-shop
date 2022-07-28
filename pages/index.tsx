@@ -37,7 +37,7 @@ export default function HomePage({ displayProducts }: HomePageProps) {
                 <Link href={`/product/${id}`}>
                   <a href={`/product/${id}`}>
                     <ProductCard
-                      src={`http://localhost:4567/${thumbnailUrl}`}
+                      src={`${process.env["NEXT_PUBLIC_API_HOST"]}${thumbnailUrl}`}
                       alt="Thrion product"
                       name={name}
                       // FIXME: This should be a human readable price
