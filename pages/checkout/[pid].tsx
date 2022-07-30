@@ -5,8 +5,13 @@ import { GetServerSideProps } from "next";
 
 import MainLayout from "@/components/layouts/MainLayout";
 import HorizontalProductCard from "@/components/products/HorizontalProductCard";
+import CheckoutConfirmationModal from "@/components/checkouts/CheckoutConfirmationModal";
+import LoadingCheckoutReceipt from "@/components/checkouts/LoadingCheckoutReceipt";
+import CheckoutModal from "@/components/checkouts/CheckoutModal";
 import { getProduct } from "@/services/product";
 import { Product } from "@/interfaces/product";
+import { createOrder } from "@/services/order";
+import { Checkout, CheckoutRequest } from "@/interfaces/checkout";
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const product = await getProduct(Number(params?.pid));
@@ -45,17 +50,24 @@ interface CheckoutPageProps {
 }
 
 export default function CheckoutPage({ product }: CheckoutPageProps) {
-  const { images, name, price } = product;
+  const { images, name, price, id } = product;
+
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [checkoutRequest, setCheckoutRequest] = useState<CheckoutRequest>();
+  const [isCheckoutReceiptLoading, setIsCheckoutReceiptLoading] =
+    useState(false);
+  const [checkoutResponse, setCheckoutResponse] = useState<Checkout>();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { handleSubmit, register } = useForm<CheckoutForm>();
-  const [whatsAppNumber, setWhatsAppNumber] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const onWhatsAppNumberChange = (e: SyntheticEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
     const regex = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
 
     if (value.length === 0) {
-      setWhatsAppNumber(value);
+      setWhatsappNumber(value);
       return;
     }
 
@@ -63,7 +75,7 @@ export default function CheckoutPage({ product }: CheckoutPageProps) {
       return;
     }
 
-    setWhatsAppNumber(e.currentTarget.value);
+    setWhatsappNumber(e.currentTarget.value);
   };
 
   // FIXME: Implement checkout
@@ -72,20 +84,60 @@ export default function CheckoutPage({ product }: CheckoutPageProps) {
     address,
     paymentMethod,
   }) => {
-    console.log(name);
-    console.log(address);
-    console.log(whatsAppNumber);
-    console.log(paymentMethod);
+    setCheckoutRequest({
+      productId: id,
+      name,
+      address,
+      paymentMethod,
+      whatsappNumber,
+      email: "internal@internal.id",
+    });
+
+    setShowConfirmationModal(true);
+  };
+
+  // FIXME: Maybe refactor the whole file
+  const commitCheckout = async () => {
+    setShowConfirmationModal(false);
+
+    setIsCheckoutReceiptLoading(true);
+
+    const checkoutResponse = await createOrder(checkoutRequest!);
+
+    setIsCheckoutReceiptLoading(false);
+
+    if (!checkoutResponse) {
+      console.log("ERROR: @checkoutResponse: ", checkoutResponse);
+      return;
+    }
+
+    setCheckoutResponse(checkoutResponse);
+
+    setIsModalOpen(true);
   };
 
   return (
     <>
       <Head>
-        <title>{name} - Checkout - Thrion Shop</title>
+        {/* FIXME: Is the title good to have the product name? */}
+        <title>Checkout - Thrion Shop</title>
       </Head>
       <MainLayout>
+        {checkoutResponse ? (
+          <CheckoutModal
+            isOpen={isModalOpen}
+            closeHandler={() => setIsModalOpen(false)}
+            checkoutResponse={checkoutResponse}
+          />
+        ) : null}
+        <CheckoutConfirmationModal
+          isOpen={showConfirmationModal}
+          onApprove={commitCheckout}
+          onCancel={() => setShowConfirmationModal(false)}
+        />
         <div className="flex justify-center w-full mb-8">
           <div className="p-4 w-full max-w-[550px] sm:border sm:mt-[50px] relative">
+            {isCheckoutReceiptLoading ? <LoadingCheckoutReceipt /> : null}
             <header className="mb-4">
               <h1>
                 <span className="uppercase font-semibold">Checkout</span> -{" "}
@@ -118,7 +170,7 @@ export default function CheckoutPage({ product }: CheckoutPageProps) {
                       required: true,
                     })}
                     onChange={onWhatsAppNumberChange}
-                    value={whatsAppNumber}
+                    value={whatsappNumber}
                     type="text"
                     id="wa-number"
                     placeholder="Enter your WhatsApp number"
