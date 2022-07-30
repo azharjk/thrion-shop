@@ -38,6 +38,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 //   DANA = "DANA",
 // }
 
+// FIXME: Add email field
 interface CheckoutForm {
   name: string;
   whatsAppNumber: string;
