@@ -18,8 +18,6 @@ export const createOrder = async (req: CheckoutRequest) => {
       }),
     });
 
-    console.log(response);
-
     responseAsJson = (await response.json()) as CheckoutResponse;
   } catch (err) {
     console.log("ERROR: @createOrder", err, req);
