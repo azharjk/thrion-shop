@@ -70,7 +70,7 @@ const CheckoutModal: NextPage<CheckoutModalProps> = ({
             checkoutMethod: "ONE_TIME_PAYMENT",
             channelCode: "ID_DANA",
             channelProperties: {
-              successRedirectURL: "https://google.com",
+              successRedirectURL: `${process.env["NEXT_PUBLIC_HOST"]}/`,
             },
           },
         },
