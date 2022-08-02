@@ -32,7 +32,7 @@ interface ProductDetailProps {
   product: Product;
 }
 
-function ProductDetail({ product }: ProductDetailProps) {
+export default function ProductDetail({ product }: ProductDetailProps) {
   const { images, id, name, price } = product;
 
   return (
@@ -83,5 +83,3 @@ function ProductDetail({ product }: ProductDetailProps) {
     </MainLayout>
   );
 }
-
-export default ProductDetail;
